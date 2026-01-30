@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <title>PsB | Sender Portal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; padding: 20px; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.08); }
+        input, select { background: #111 !important; border: 1px solid #222 !important; color: white !important; width: 100%; padding: 15px; border-radius: 15px; margin-bottom: 12px; outline: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto">
+    <header class="mb-8">
+        <h1 class="text-teal-500 font-black italic text-2xl">SENDER PORTAL</h1>
+        <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">Generate Package Code</p>
+    </header>
+    
+    <div class="glass-card p-8 rounded-[2.5rem]">
+        <input id="receiver" type="text" placeholder="Receiver Name">
+        <input id="price" type="number" placeholder="Price (K)">
+        <input id="rLoc" type="text" placeholder="Destination Location">
+        <select id="payment">
+            <option value="Airtel Money">Airtel Money</option>
+            <option value="Mpamba">Mpamba</option>
+            <option value="Cash on Delivery">Cash on Delivery</option>
+        </select>
+        
+        <button onclick="generateAndSend()" class="w-full bg-teal-500 text-black font-black py-5 rounded-2xl mt-4 text-sm uppercase tracking-widest">
+            Generate & Save to Hub
+        </button>
+    </div>
+
+    <div id="codeDisplay" class="hidden mt-6 p-8 glass-card border-teal-500/30 rounded-[2.5rem] text-center animate-bounce">
+        <p class="text-teal-500 font-bold text-xs uppercase mb-2">Package Generated!</p>
+        <h2 id="finalCode" class="text-6xl font-black tracking-tighter text-white">----</h2>
+        <p class="text-slate-500 text-[10px] mt-4 uppercase">Give this code to the Receiver/Driver</p>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoPJrg9FUegQ9ADbmcYTk9hTUWIIdw1i8",
+            authDomain: "psb-logistics.firebaseapp.com",
+            databaseURL: "https://psb-logistics-default-rtdb.firebaseio.com/",
+            projectId: "psb-logistics",
+            storageBucket: "psb-logistics.firebasestorage.app",
+            messagingSenderId: "947266223631",
+            appId: "1:947266223631:web:c53f26ba0c6b0745dd6d7a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('psb_db');
+
+        function generateAndSend() {
+            // Generate a random 4-digit code
+            const generatedCode = Math.floor(1000 + Math.random() * 9000);
+            
+            const entry = {
+                receiver: document.getElementById('receiver').value,
+                code: generatedCode,
+                price: document.getElementById('price').value,
+                rLoc: document.getElementById('rLoc').value,
+                payment: document.getElementById('payment').value,
+                status: 'Pending',
+                timestamp: Date.now()
+            };
+
+            if(!entry.receiver || !entry.price) return alert("Please fill details");
+
+            // SAVE TO CLOUD IMMEDIATELY
+            dbRef.push(entry).then(() => {
+                document.getElementById('finalCode').innerText = generatedCode;
+                document.getElementById('codeDisplay').classList.remove('hidden');
+                // Optional: Clear form
+                document.getElementById('receiver').value = '';
+            }).catch(e => alert("Sync Failed: " + e.message));
+        }
+    </script>
+</body>
+</html>
