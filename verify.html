@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <title>PsB | Driver Portal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); }
+        input, select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
+    </style>
+</head>
+<body class="p-6 md:p-12 max-w-2xl mx-auto">
+
+    <header class="mb-10 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-black tracking-tighter text-teal-500 italic">PsB DRIVER</h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Package Verification System</p>
+        </div>
+        <div id="cloudStatus" class="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></div>
+    </header>
+
+    <div class="glass-card p-8 rounded-[2.5rem] mb-8">
+        <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> New Entry
+        </h2>
+        <div class="grid grid-cols-2 gap-4">
+            <input id="receiver" type="text" placeholder="Receiver Name" class="col-span-2 p-4 rounded-2xl outline-none focus:border-teal-500 transition">
+            <input id="code" type="number" placeholder="4-Digit Code" class="p-4 rounded-2xl outline-none focus:border-teal-500 transition">
+            <input id="price" type="number" placeholder="Price (K)" class="p-4 rounded-2xl outline-none focus:border-teal-500 transition">
+            <input id="rLoc" type="text" placeholder="Location" class="col-span-2 p-4 rounded-2xl outline-none focus:border-teal-500 transition">
+            <select id="payment" class="col-span-2 p-4 rounded-2xl outline-none appearance-none">
+                <option value="Airtel Money">Airtel Money</option>
+                <option value="Mpamba">Mpamba</option>
+                <option value="Cash on Delivery">Cash on Delivery</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+            <button onclick="saveEntry()" class="col-span-2 bg-teal-500 text-black font-black py-5 rounded-2xl mt-2 active:scale-95 transition uppercase tracking-widest text-sm">
+                Upload to Cloud
+            </button>
+        </div>
+    </div>
+
+    <div class="glass-card p-8 rounded-[2.5rem]">
+        <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Update Package Status</h2>
+        <input id="searchCode" type="number" onkeyup="searchPackage()" placeholder="Enter 4-Digit Code to verify..." class="w-full p-5 rounded-2xl mb-4 text-center text-xl font-black tracking-[0.5em] focus:border-teal-500
