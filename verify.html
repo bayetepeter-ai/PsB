@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <title>PsB | Driver Upload</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; padding: 20px; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); }
+        input, select { background: #111 !important; border: 1px solid #222 !important; color: white !important; width: 100%; padding: 15px; border-radius: 15px; margin-bottom: 10px; outline: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto">
+    <h1 class="text-teal-500 font-black italic text-xl mb-6">PsB DRIVER UPLOAD</h1>
+    
+    <div class="glass-card p-6 rounded-[2rem]">
+        <input id="receiver" type="text" placeholder="Receiver Name">
+        <input id="code" type="number" placeholder="4-Digit Code">
+        <input id="price" type="number" placeholder="Price (K)">
+        <input id="rLoc" type="text" placeholder="Location">
+        <select id="payment">
+            <option value="Airtel Money">Airtel Money</option>
+            <option value="Mpamba">Mpamba</option>
+            <option value="Cash on Delivery">Cash on Delivery</option>
+        </select>
+        <button onclick="saveEntry()" class="w-full bg-teal-500 text-black font-black py-4 rounded-2xl mt-4">UPLOAD TO CLOUD</button>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoPJrg9FUegQ9ADbmcYTk9hTUWIIdw1i8",
+            authDomain: "psb-logistics.firebaseapp.com",
+            databaseURL: "https://psb-logistics-default-rtdb.firebaseio.com/",
+            projectId: "psb-logistics",
+            storageBucket: "psb-logistics.firebasestorage.app",
+            messagingSenderId: "947266223631",
+            appId: "1:947266223631:web:c53f26ba0c6b0745dd6d7a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('psb_db');
+
+        function saveEntry() {
+            const entry = {
+                receiver: document.getElementById('receiver').value,
+                code: document.getElementById('code').value,
+                price: document.getElementById('price').value,
+                rLoc: document.getElementById('rLoc').value,
+                payment: document.getElementById('payment').value,
+                status: 'Pending'
+            };
+
+            if(!entry.receiver || !entry.code) return alert("Missing Info");
+
+            dbRef.push(entry).then(() => {
+                alert("Saved to Cloud!");
+                location.reload();
+            }).catch(e => alert("Error: " + e.message));
+        }
+    </script>
+</body>
+</html>
