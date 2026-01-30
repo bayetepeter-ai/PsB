@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <title>PsB | Driver Portal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.1); }
+        input, select { background: rgba(255,255,255,0.05) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+    </style>
+</head>
+<body class="p-6 max-w-lg mx-auto pb-20">
+
+    <header class="mb-10 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-black text-teal-500 italic">PsB DRIVER</h1>
+            <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Cloud Verification System</p>
+        </div>
+        <div id="sync-indicator" class="flex items-center gap-2 text-[9px] font-black uppercase text-teal-500">
+            <span class="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span> Online
+        </div>
+    </header>
+
+    <div class="glass-card p-6 rounded-[2.5rem] mb-8">
+        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2">
+            <i data-lucide="plus" class="w-3 h-3 text-teal-500"></i> Register New Package
+        </h2>
+        <div class="space-y-3">
+            <input id="receiver" type="text" placeholder="Receiver Name" class="w-full p-4 rounded-2xl outline-none focus:border-teal-500">
+            <div class="flex gap-3">
+                <input id="code" type="number" placeholder="4-Digit Code" class="w-1/2 p-4 rounded-2xl outline-none">
+                <input id="price" type="number" placeholder="Price (K)" class="w-1/2 p-4 rounded-2xl outline-none">
+            </div>
+            <input id="rLoc" type="text" placeholder="Location (e.g. Area 47)" class="w-full p-4 rounded-2xl outline-none">
+            <select id="payment" class="w-full p-4 rounded-2xl outline-none">
+                <option value="Airtel Money">Airtel Money</option>
+                <option value="Mpamba">Mpamba</option>
+                <option value="Cash on Delivery">Cash on Delivery</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+            <button onclick="saveEntry()" class="w-full bg-teal-500 text-black font-black py-4 rounded-2xl mt-2 active:scale-95 transition">
+                UPLOAD TO CLOUD
+            </button>
+        </div>
+    </div>
+
+    <div class="glass-card p-6 rounded-[2.5rem]">
+        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-3 h-3 text-teal-500"></i> Mark as Delivered
+        </h2>
+        <input id="searchCode" type="number" onkeyup="searchAndDisplay()" placeholder="Enter Code..." class="w-full p-6 rounded-2xl mb-4 text-center text-3xl font-black border-teal-500/30 tracking-widest">
+        
+        <div id="searchResult" class="hidden">
+            </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoPJrg9FUegQ9ADbmcYTk9hTUWIIdw1i8",
+            authDomain: "psb-logistics.firebaseapp.com",
+            databaseURL: "https://psb-logistics-default-rtdb.firebaseio.com/",
+            projectId: "psb-logistics",
+            storageBucket: "psb-logistics.firebasestorage.app",
+            messagingSenderId: "947266223631",
+            appId: "1:947266223631:web:c53f26ba0c6b0745dd6d7a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('psb_db');
+        let cloudData = {};
+
+        // Sync with cloud data
+        dbRef.on('value', (snapshot) => {
+            cloudData = snapshot.val() || {};
+            document.getElementById('sync-indicator').innerHTML = `<span class="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span> Online`;
+        });
+
+        // Save New Entry
+        function saveEntry() {
+            const entry = {
+                receiver: document.getElementById('receiver').value,
+                code: document.getElementById('code').value,
+                price: document.getElementById('price').value,
+                rLoc: document.getElementById('rLoc').value,
+                payment: document.getElementById('payment').value,
+                status: 'Pending',
+                time: new Date().toLocaleTimeString()
+            };
+
+            if(!entry.receiver || !entry.code) return alert("Fill Name and Code!");
+
+            dbRef.push(entry).then(() => {
+                alert("Package Synced to Hub!");
+                ['receiver', 'code', 'price', 'rLoc'].forEach(id => document.getElementById(id).value = '');
+            });
+        }
+
+        // Search for verification
+        function searchAndDisplay() {
+            const code = document.getElementById('searchCode').value;
+            const resDiv = document.getElementById('searchResult');
+            
+            if(!code || code.length < 1) {
+                resDiv.classList.add('hidden');
+                return;
+            }
+
+            const key = Object.keys(cloudData).find(k => cloudData[k].code == code);
+            const pkg = cloudData[key];
+
+            if(pkg) {
+                resDiv.classList.remove('hidden');
+                resDiv.innerHTML = `
+                    <div class="bg-white/5 border border-white/10 p-6 rounded-3xl text-center">
+                        <p class="text-white font-black text-xl mb-1">${pkg.receiver}</p>
+                        <p class="text-[10px] text-slate-500 mb-4 font-bold uppercase">${pkg.payment} | K${pkg.price}</p>
+                        
+                        ${pkg.status === 'Delivered' ? 
+                            `<div class="py-3 text-teal-500 font-black uppercase text-xs italic">Already Verified ✓</div>` :
+                            `<button onclick="confirmDelivery('${key}')" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs">Confirm Delivery</button>`
+                        }
+                    </div>
+                `;
+            } else {
+                resDiv.classList.remove('hidden');
+                resDiv.innerHTML = `<p class="text-center text-slate-600 font-bold text-[10px] uppercase py-4 italic">No matching package code</p>`;
+            }
+        }
+
+        // Final Update to Cloud
+        function confirmDelivery(key) {
+            dbRef.child(key).update({ status: 'Delivered' })
+                .then(() => {
+                    document.getElementById('searchCode').value = '';
+                    document.getElementById('searchResult').classList.add('hidden');
+                    alert("Delivery Confirmed!");
+                });
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
