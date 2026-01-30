@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>PsB | Driver Verification</title>
+</head>
+<body class="bg-[#050505] text-white flex items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-sm bg-[#111] p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
+        
+        <a href="dashboard.html" class="absolute top-6 left-6 text-slate-500 hover:text-white transition">
+            <i data-lucide="chevron-left"></i>
+        </a>
+
+        <div class="text-center mb-8 pt-4">
+            <div class="w-16 h-16 bg-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-500/20">
+                <i data-lucide="shield-check" class="text-black w-8 h-8"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tighter uppercase">Verify Code</h1>
+            <p class="text-slate-500 text-[10px] uppercase tracking-[0.3em] mt-1">Lilongwe Delivery Unit</p>
+        </div>
+
+        <div class="space-y-6">
+            <div id="inputGroup">
+                <label class="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-widest">Enter Receiver Code</label>
+                <input id="vCode" type="text" maxlength="4" placeholder="0000" 
+                       class="w-full bg-black border border-white/10 p-5 rounded-2xl text-center text-4xl font-black tracking-[0.4em] text-teal-400 outline-none focus:border-teal-500 transition-all shadow-inner">
+            </div>
+
+            <div id="successState" class="hidden text-center py-4">
+                <p class="text-teal-500 font-bold">Success! Redirecting...</p>
+            </div>
+
+            <button id="verifyBtn" onclick="processVerify()" class="w-full bg-teal-500 text-black font-black py-5 rounded-2xl hover:bg-teal-400 transition transform active:scale-95 shadow-lg shadow-teal-500/10">
+                CONFIRM & LOG
+            </button>
+            
+            <p class="text-center text-slate-600 text-[10px] uppercase tracking-widest">PsB Logistics Internal Use Only</p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function processVerify() {
+            const code = document.getElementById('vCode').value.trim();
+            const btn = document.getElementById('verifyBtn');
+            const successText = document.getElementById('successState');
+            const inputGroup = document.getElementById('inputGroup');
+
+            let db = JSON.parse(localStorage.getItem('psb_db')) || [];
+            let found = false;
+
+            db = db.map(p => {
+                if(p.code.toString() === code && p.status !== 'Delivered') {
+                    p.status = 'Delivered';
+                    p.deliveryDate = new Date().toLocaleString();
+                    found = true;
+                }
+                return p;
+            });
+
+            if(found) {
+                localStorage.setItem('psb_db', JSON.stringify(db));
+                
+                // Visual feedback before redirect
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+                inputGroup.classList.add('opacity-20');
+                successText.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1200); // 1.2 second delay so they see the success
+            } else {
+                alert("❌ INVALID CODE\nEither the code is wrong or this parcel was already marked as delivered.");
+                document.getElementById('vCode').value = '';
+                document.getElementById('vCode').focus();
+            }
+        }
+    </script>
+</body>
+</html>
